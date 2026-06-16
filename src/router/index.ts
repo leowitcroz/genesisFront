@@ -48,7 +48,53 @@ const router = createRouter({
 
 
 // Middleware de Proteção (O Segurança da Porta)
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+
+
+
+  const hostname = window.location.hostname;
+
+  // 🛑 1. SE FOR O DOMÍNIO PRINCIPAL: Libera a rota (Aqui entrará sua Landing Page)
+  if (hostname === 'wsdigital.app.br' || hostname === 'www.wsdigital.app.br' || hostname === 'localhost') {
+    // Se quiser, pode redirecionar para uma rota de landing page específica.
+    // Por enquanto, apenas deixamos seguir.
+  }
+
+  // 🛑 2. SE FOR UM SUBDOMÍNIO: Valida na API antes de mostrar qualquer coisa!
+  else {
+    // Pega a primeira parte da URL (ex: 'dahsjk' de dahsjk.wsdigital.app.br)
+    const subdomain = hostname.split('.')[0];
+
+    // Vamos checar se já validamos esse tenant nesta sessão para não sobrecarregar a API
+    const tenantValidado = sessionStorage.getItem(`tenant_valido_${subdomain}`);
+
+    if (!tenantValidado) {
+      try {
+        // Bate lá naquele seu endpoint do NestJS
+        // Ajuste a URL caso a sua variável VITE_API_URL esteja configurada de outra forma
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://api.wsdigital.app.br';
+        const response = await fetch(`${apiUrl}/tenants/info/${subdomain}`);
+
+        if (!response.ok) {
+          // Se o NestJS devolveu 404 (NotFoundException), o tenant não existe!
+          // Chuta o usuário imediatamente para a página principal:
+          window.location.href = 'https://wsdigital.app.br';
+          return; // Para a execução do guard aqui
+        }
+
+        // Se deu 200, o tenant existe! Salva na sessão para não perguntar de novo
+        sessionStorage.setItem(`tenant_valido_${subdomain}`, 'true');
+
+      } catch (error) {
+        // Em caso de erro na rede ou API fora do ar, joga pra raiz por segurança
+        window.location.href = 'https://wsdigital.app.br';
+        return;
+      }
+    }
+  }
+
+
+
   // 1. O TRUQUE MÁGICO: Se vier token pela URL no redirecionamento, salva no cookie da casa nova!
   if (to.query.sync_token) {
     // Extrai os valores com segurança garantindo que sejam Strings (evitando o erro do TypeScript)
