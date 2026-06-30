@@ -141,7 +141,7 @@ const handleLogin = async () => {
                 if (isLocalhost) {
                     window.location.href = `http://${subdomain}.localhost:5173/home?sync_token=${accessToken}&sync_tenant=${tenantId}&sync_features=${featuresCodificadas}`;
                 } else {
-                    window.location.href = `http://${subdomain}.genesis.com/home?sync_token=${accessToken}&sync_tenant=${tenantId}&sync_features=${featuresCodificadas}`;
+                    window.location.href = `https://${subdomain}.wsdigital.app.br/home?sync_token=${accessToken}&sync_tenant=${tenantId}&sync_features=${featuresCodificadas}`;
                 }
             }
             // Caso 2: Login no lugar certo
